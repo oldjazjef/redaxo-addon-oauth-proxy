@@ -1,0 +1,12 @@
+oauth_proxy_title = ETX OAuth Proxy
+oauth_proxy_settings = Einstellungen
+oauth_proxy_settings_saved = Einstellungen erfolgreich gespeichert.
+oauth_proxy_client_id = Client ID
+oauth_proxy_client_secret = Client Secret
+oauth_proxy_provider_url = Provider URL
+oauth_proxy_redirect_uri = Redirect URI
+oauth_proxy_scope = Scope
+oauth_proxy_save = Speichern
+oauth_proxy_endpoint_info = Endpoint Informationen
+oauth_proxy_endpoint_url = Endpoint URL
+oauth_proxy_endpoint_usage = Nutzung des Endpoints

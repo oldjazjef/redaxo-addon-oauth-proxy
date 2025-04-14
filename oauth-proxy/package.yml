@@ -1,0 +1,19 @@
+package: oauth_proxy
+version: '1.0.0'
+author: 'oldjazjef'
+supportpage: 'https://github.com/oldjazjef'
+
+requires:
+    redaxo: '^5.0'
+
+page:
+    title: 'OAuth Proxy'
+    perm: admin
+    icon: rex-icon fa-key
+    subpages:
+        settings:
+            title: 'Settings'
+            perm: admin
+        endpoint:
+            title: 'Endpoint Info'
+            perm: admin

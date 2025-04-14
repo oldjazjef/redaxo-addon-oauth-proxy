@@ -1,0 +1,35 @@
+# Enable CORS specifically for this directory
+<IfModule mod_headers.c>
+    # Always set these headers for all requests in this directory
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    Header always set Access-Control-Allow-Credentials "true"
+    Header always set Access-Control-Max-Age "86400"
+    
+    # Handle OPTIONS method specially
+    <If "%{REQUEST_METHOD} == 'OPTIONS'">
+        # Force 200 status code for OPTIONS requests
+        Header always set Status "200 OK"
+        Header always set Content-Length "0"
+        Header always set Content-Type "text/plain"
+        # Return immediately for OPTIONS requests
+        RewriteEngine On
+        RewriteRule .* - [R=200,L]
+    </If>
+</IfModule>
+
+# Remove any restrictions for this directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Allow OPTIONS requests to pass through
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+</IfModule>
+
+# Disable any security settings that might interfere with CORS
+<IfModule mod_security.c>
+    # Disable ModSecurity for this directory
+    SecRuleEngine Off
+</IfModule>
