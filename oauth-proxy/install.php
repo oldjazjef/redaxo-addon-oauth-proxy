@@ -14,6 +14,7 @@ if (!$addon->hasConfig()) {
     $addon->setConfig('client_id', '');
     $addon->setConfig('client_secret', '');
     $addon->setConfig('provider_url', '');
+    $addon->setConfig('grant_type', 'client_credentials');
 }
 
 // Create necessary directories
