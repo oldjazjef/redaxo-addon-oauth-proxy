@@ -20,7 +20,6 @@ class rex_api_my_endpoint extends rex_api_function {
         // Process requests
         $response = [];
 
-
         try {
             switch ($_SERVER['REQUEST_METHOD']) {
                 case 'GET':
@@ -44,13 +43,12 @@ class rex_api_my_endpoint extends rex_api_function {
     private function handleGet() {
         return ['message' => 'GET response', 'data' => $_GET];
     }   
-    
-    private function handlePost() {
-        // Get OAuth configuration from addon settings
+      private function handlePost() {
         $addon = rex_addon::get('oauth_proxy');
         $provider_url = $addon->getConfig('provider_url', '');
         $client_id = $addon->getConfig('client_id', '');
         $client_secret = $addon->getConfig('client_secret', '');
+        $grant_type = $addon->getConfig('grant_type', 'client_credentials');
         
         if (empty($provider_url)) {
             throw new Exception('Provider URL not configured', 500);
@@ -59,11 +57,10 @@ class rex_api_my_endpoint extends rex_api_function {
         if (empty($client_id) || empty($client_secret)) {
             throw new Exception('Client credentials not configured', 500);
         }
-          // Prepare the OAuth request data
+          
+        // Prepare the OAuth request data - only include grant_type in POST body
         $post_data = [
-            'client_id' => $client_id,
-            'client_secret' => $client_secret,
-            'grant_type' => 'client_credentials'
+            'grant_type' => $grant_type
         ];
         
         // Initialize cURL session
@@ -73,48 +70,48 @@ class rex_api_my_endpoint extends rex_api_function {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         
-        // Try JSON format since form-urlencoded resulted in 415 error
-        $json_data = json_encode($post_data);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+        // Use application/x-www-form-urlencoded as per OAuth 2.0 standard
+        $post_fields = http_build_query($post_data);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_fields);
+        
+        // Create the Basic Authentication header using client_id and client_secret
+        $auth = base64_encode($client_id . ':' . $client_secret);
+        
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen($json_data),
+            'Authorization: Basic ' . $auth,
+            'Content-Type: application/x-www-form-urlencoded',
             'Accept: application/json'
         ]);
         
         curl_setopt($ch, CURLOPT_HEADER, true); // Get headers to extract cookies
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Consider removing in production
+
+        // TODO verify if needed to remove
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
         
-        // Execute the request
         $response = curl_exec($ch);
         
         if ($response === false) {
             throw new Exception('Error connecting to provider: ' . curl_error($ch), 500);
         }
         
-        // Get HTTP status code
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
-        // Split headers and body
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $header_text = substr($response, 0, $header_size);
         $body = substr($response, $header_size);
         
         curl_close($ch);
         
-        // Check for successful response
         if ($http_code < 200 || $http_code >= 300) {
             throw new Exception('Provider returned error: ' . $body, $http_code);
         }
         
-        // Parse the response body
         $result = json_decode($body, true);
         
         if (!$result && json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception('Invalid JSON response from provider', 500);
         }
         
-        // Extract and forward cookies from the provider's response
+        // Extract and forward cookies from the provider's response in case it uses cookies to store token information
         preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $header_text, $matches);
         
         if (!empty($matches[1])) {

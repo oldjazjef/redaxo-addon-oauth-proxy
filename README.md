@@ -86,6 +86,48 @@ axios.post("https://your-site.com/index.php?rex-api-call=oauth_proxy", {}, {
 });
 ```
 
+### API Proxy Functionality
+
+The addon now provides a full API proxy that can forward requests to external APIs while handling OAuth authentication automatically:
+
+```
+https://your-site.com/index.php?rex-api-call=proxy_endpoint&target=https://api.example.com/data
+```
+
+With this feature you can:
+- Make requests to any API endpoint through the proxy
+- The proxy automatically handles OAuth authentication and token refresh
+- All headers and query parameters are forwarded to the target API
+- CORS is handled automatically
+
+#### Example: Proxying API Requests with Axios
+
+```js
+// Make a request to an external API through the proxy
+axios({
+  method: 'get',
+  url: 'https://your-site.com/index.php?rex-api-call=proxy',
+  params: {
+    target: 'https://api.example.com/users', // Target API endpoint
+    limit: 10,                               // Additional parameters for the API
+    offset: 0
+  },
+  withCredentials: true // Important for maintaining session cookies
+})
+.then(...)
+```
+
+#### Example: Making POST Requests Through the Proxy
+
+```js
+// Make an oauth request agains the provider through the plugins oauth_proxy endpoint
+axios({
+  method: 'post',
+  url: 'https://your-site.com/index.php?rex-api-call=oauth_proxy'
+})
+.then(...)
+```
+
 ## How It Works
 
 1. The client makes a POST request to the proxy endpoint
